@@ -42,7 +42,7 @@ class S3StringSimpleCache implements CacheInterface
 		return (string) $result['Body'];
 	}
 
-	public function set($key, mixed $value, \DateInterval|int $ttl = null): bool
+	public function set($key, mixed $value, $ttl = null): bool
 	{
 		$this->assertKeyIsValid($key);
 
@@ -106,7 +106,7 @@ class S3StringSimpleCache implements CacheInterface
 		return array_map(fn($key) => $this->get($key, $default), is_array($keys) ? $keys : iterator_to_array($keys));
 	}
 
-	public function setMultiple($values, \DateInterval|int $ttl = null): bool
+	public function setMultiple($values, $ttl = null): bool
 	{
 		foreach ($values as $key => $value) {
 			if (!$this->set($key, $value, $ttl)) {
