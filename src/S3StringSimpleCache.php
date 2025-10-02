@@ -6,6 +6,7 @@ use Aws\S3\Exception\S3Exception;
 use Aws\S3\S3Client;
 use Psr\Clock\ClockInterface;
 use Psr\SimpleCache\CacheInterface;
+use Psr\SimpleCache\InvalidArgumentException;
 
 class S3StringSimpleCache implements CacheInterface
 {
@@ -16,7 +17,7 @@ class S3StringSimpleCache implements CacheInterface
 	) {
 	}
 
-	public function get($key, mixed $default = null): string
+	public function get($key, mixed $default = null): mixed
 	{
 		$this->assertKeyIsValid($key);
 
@@ -101,6 +102,10 @@ class S3StringSimpleCache implements CacheInterface
 		throw new \BadMethodCallException('Not implemented');
 	}
 
+	/**
+	 * @param iterable $keys
+	 * @throws InvalidArgumentException
+	 */
 	public function getMultiple($keys, mixed $default = null): iterable
 	{
 		return array_map(fn($key) => $this->get($key, $default), is_array($keys) ? $keys : iterator_to_array($keys));
