@@ -4,6 +4,7 @@ namespace Nalgoo\Caching;
 
 use Aws\S3\Exception\S3Exception;
 use Aws\S3\S3Client;
+use DateTimeImmutable;
 use Psr\Clock\ClockInterface;
 use Psr\SimpleCache\CacheInterface;
 

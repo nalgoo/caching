@@ -13,7 +13,7 @@
     "php": ">=8.1",
     "aws/aws-sdk-php": "^3.356",
     "psr/clock": "^1.0",
-    "psr/simple-cache": "^3.0"
+    "psr/simple-cache": "*"
   },
   "autoload": {
     "psr-4": {
