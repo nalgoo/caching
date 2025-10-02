@@ -4,7 +4,6 @@ namespace Nalgoo\Caching;
 
 use Aws\S3\Exception\S3Exception;
 use Aws\S3\S3Client;
-use DateTimeImmutable;
 use Psr\Clock\ClockInterface;
 use Psr\SimpleCache\CacheInterface;
 
@@ -17,7 +16,7 @@ class S3StringSimpleCache implements CacheInterface
 	) {
 	}
 
-	public function get(string $key, mixed $default = null): string
+	public function get($key, mixed $default = null): string
 	{
 		$this->assertKeyIsValid($key);
 
@@ -43,7 +42,7 @@ class S3StringSimpleCache implements CacheInterface
 		return (string) $result['Body'];
 	}
 
-	public function set(string $key, mixed $value, \DateInterval|int $ttl = null): bool
+	public function set($key, mixed $value, \DateInterval|int $ttl = null): bool
 	{
 		$this->assertKeyIsValid($key);
 
@@ -78,7 +77,7 @@ class S3StringSimpleCache implements CacheInterface
 		}
 	}
 
-	public function delete(string $key): bool
+	public function delete($key): bool
 	{
 		$this->assertKeyIsValid($key);
 
@@ -102,12 +101,12 @@ class S3StringSimpleCache implements CacheInterface
 		throw new \BadMethodCallException('Not implemented');
 	}
 
-	public function getMultiple(iterable $keys, mixed $default = null): iterable
+	public function getMultiple($keys, mixed $default = null): iterable
 	{
 		return array_map(fn($key) => $this->get($key, $default), is_array($keys) ? $keys : iterator_to_array($keys));
 	}
 
-	public function setMultiple(iterable $values, \DateInterval|int $ttl = null): bool
+	public function setMultiple($values, \DateInterval|int $ttl = null): bool
 	{
 		foreach ($values as $key => $value) {
 			if (!$this->set($key, $value, $ttl)) {
@@ -118,7 +117,7 @@ class S3StringSimpleCache implements CacheInterface
 		return true;
 	}
 
-	public function deleteMultiple(iterable $keys): bool
+	public function deleteMultiple($keys): bool
 	{
 		foreach ($keys as $key) {
 			if (!$this->delete($key)) {
@@ -129,16 +128,16 @@ class S3StringSimpleCache implements CacheInterface
 		return true;
 	}
 
-	public function has(string $key): bool
+	public function has($key): bool
 	{
 		$this->assertKeyIsValid($key);
 
 		return $this->client->doesObjectExistV2($this->bucket, $key);
 	}
 
-	private function assertKeyIsValid(string $key): void
+	private function assertKeyIsValid($key): void
 	{
-		if (!preg_match('/^[a-zA-Z0-9\-_.]{1,64}$/', $key)) {
+		if (!is_string($key) || !preg_match('/^[a-zA-Z0-9\-_.]{1,64}$/', $key)) {
 			throw new \InvalidArgumentException('Invalid key');
 		}
 	}
