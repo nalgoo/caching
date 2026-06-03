@@ -14,17 +14,20 @@ class S3StringSimpleCache implements CacheInterface
 		private readonly S3Client       $client,
 		private readonly string         $bucket,
 		private readonly ClockInterface $clock,
+		private readonly string         $prefix = '',
 	) {
+		$this->assertPrefixIsValid($prefix);
 	}
 
 	public function get($key, mixed $default = null): mixed
 	{
 		$this->assertKeyIsValid($key);
+		$prefixedKey = $this->getPrefixedKey($key);
 
 		try {
 			$result = $this->client->getObject([
 				'Bucket' => $this->bucket,
-				'Key' => $key,
+				'Key' => $prefixedKey,
 			]);
 		} catch (S3Exception $e) {
 			if ($e->getAwsErrorCode() === 'NoSuchKey') {
@@ -46,6 +49,7 @@ class S3StringSimpleCache implements CacheInterface
 	public function set($key, mixed $value, $ttl = null): bool
 	{
 		$this->assertKeyIsValid($key);
+		$prefixedKey = $this->getPrefixedKey($key);
 
 		if (!is_string($value)) {
 			return false;
@@ -65,7 +69,7 @@ class S3StringSimpleCache implements CacheInterface
 
 			$this->client->putObject([
 				'Bucket' => $this->bucket,
-				'Key' => $key,
+				'Key' => $prefixedKey,
 				'Body' => $value,
 				'ACL' => 'private',
 				'ContentType' => 'application/json',
@@ -81,11 +85,12 @@ class S3StringSimpleCache implements CacheInterface
 	public function delete($key): bool
 	{
 		$this->assertKeyIsValid($key);
+		$prefixedKey = $this->getPrefixedKey($key);
 
 		try {
 			$this->client->deleteObject([
 				'Bucket' => $this->bucket,
-				'Key' => $key,
+				'Key' => $prefixedKey,
 			]);
 
 			return true;
@@ -136,8 +141,9 @@ class S3StringSimpleCache implements CacheInterface
 	public function has($key): bool
 	{
 		$this->assertKeyIsValid($key);
+		$prefixedKey = $this->getPrefixedKey($key);
 
-		return $this->client->doesObjectExistV2($this->bucket, $key);
+		return $this->client->doesObjectExistV2($this->bucket, $prefixedKey);
 	}
 
 	private function assertKeyIsValid($key): void
@@ -145,5 +151,19 @@ class S3StringSimpleCache implements CacheInterface
 		if (!is_string($key) || !preg_match('/^[a-zA-Z0-9\-_.]{1,64}$/', $key)) {
 			throw new \InvalidArgumentException('Invalid key');
 		}
+	}
+
+	private function assertPrefixIsValid($prefix): void
+	{
+		if (!is_string($prefix) || !preg_match('/^[a-zA-Z0-9\-_.\/]{0,64}$/', $prefix)) {
+			throw new \InvalidArgumentException('Invalid prefix');
+		}
+	}
+
+	private function getPrefixedKey(string $key): string
+	{
+		return $this->prefix
+			? rtrim($this->prefix, '/').'/'.$key
+			: $key;
 	}
 }
